@@ -1,11 +1,11 @@
 # pm_ai_assistant/main.py
 import streamlit as st
-import openai
+from openai import OpenAI
 import pandas as pd
 import time
 
-# Set your OpenAI API key
-openai.api_key = st.secrets["OPENAI_API_KEY"]  # Or use your own method to load securely
+# Initialize OpenAI client
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -26,7 +26,7 @@ if st.button("Ask Assistant") and user_input:
 
     with st.spinner("Thinking..."):
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an internal project management assistant. Answer clearly and practically."},
@@ -63,3 +63,4 @@ if st.button("Submit Feedback"):
     ])
     feedback_data.to_csv("feedback_log.csv", mode="a", index=False, header=False)
     st.success("✅ Feedback recorded. Thanks!")
+
