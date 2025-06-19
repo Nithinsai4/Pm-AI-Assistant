@@ -18,6 +18,8 @@ if "history" not in st.session_state:
     st.session_state.history = []
 if "summary" not in st.session_state:
     st.session_state.summary = ""
+if "last_reply" not in st.session_state:
+    st.session_state.last_reply = ""
 
 # ----------------------------
 # 1. PDF Upload & Summarization
@@ -87,6 +89,7 @@ if st.button("Ask Assistant") and user_input:
             )
             reply = response.choices[0].message.content
             st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.last_reply = reply  # ✅ Save for feedback
             st.session_state.history.append({
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "question": user_input,
@@ -95,6 +98,7 @@ if st.button("Ask Assistant") and user_input:
         except Exception as e:
             reply = f"Error: {str(e)}"
             st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.last_reply = reply
 
 # Display chat history
 for msg in st.session_state.messages:
@@ -102,7 +106,7 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
 # ----------------------------
-# 4. Feedback Loop
+# 4. Feedback Loop (Fixed)
 # ----------------------------
 st.markdown("---")
 st.subheader("📣 Was this answer helpful?")
@@ -110,10 +114,13 @@ feedback = st.radio("Feedback", ["👍 Yes", "👎 No"], horizontal=True)
 comments = st.text_area("Any comments or suggestions?")
 
 if st.button("Submit Feedback"):
+    question = user_input if user_input else "N/A"
+    response = st.session_state.get("last_reply", "No assistant reply available.")
+    
     feedback_data = pd.DataFrame.from_records([{
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "question": user_input,
-        "response": reply,
+        "question": question,
+        "response": response,
         "feedback": feedback,
         "comments": comments
     }])
